@@ -66,7 +66,7 @@ const VER_TUPLE = matches.slice(1, 4).join(".") + `.${matches[5]}`; // x.y.z.w
 // Check the git status
 let git_status;
 try {
-    git_status = child_process.execSync("git s --porcelain=v2 -b -v -u");
+    git_status = child_process.execSync("git status --porcelain=v2 -b -v -u");
 } catch (err) {
     console.warn(`Could not get git status: ${err}`);
 }
