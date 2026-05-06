@@ -113,6 +113,10 @@ _NAM.CFG_CONFIRM_DEL_OF_AUDIBLE_TABS = "confirm-del-of-audible-tabs";
 _DEF[_NAM.CFG_CONFIRM_DEL_OF_AUDIBLE_TABS] = false;
 _VAL[_NAM.CFG_CONFIRM_DEL_OF_AUDIBLE_TABS] = _vbool;
 
+_NAM.CFG_CONFIRM_DEL_OF_ALL_CLOSED = "confirm-del-of-all-closed-wins";
+_DEF[_NAM.CFG_CONFIRM_DEL_OF_ALL_CLOSED] = true;
+_VAL[_NAM.CFG_CONFIRM_DEL_OF_ALL_CLOSED] = _vbool;
+
 _NAM.CFG_URL_IN_TOOLTIP = "tooltip-has-url";
 _DEF[_NAM.CFG_URL_IN_TOOLTIP] = false;
 _VAL[_NAM.CFG_URL_IN_TOOLTIP] = _vbool;

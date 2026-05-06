@@ -190,6 +190,14 @@
     "message": "загрузить содержания резерва"
     ,"description":"The menu item to load tree items from disk"
   }
+  , "menuDeleteAllClosedWindows": {
+    "message": "удалить все закрытые узлы"
+    ,"description":"The menu item to delete all closed-window nodes from the tree"
+  }
+  , "dlgpDeleteAllClosedWindows": {
+    "message": "Удалить <b>все</b> закрытые окна из дерева? Это действие нельзя отменить."
+    ,"description":"Prompt for whether the user wants to delete every closed window from the tree at once"
+  }
   , "menuSort": {
     "message": "сортировка"
     ,"description":"The text of the submenu with the sort options"

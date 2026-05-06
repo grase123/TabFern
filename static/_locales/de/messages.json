@@ -190,6 +190,14 @@
     "message": "Lade den Inhalt eines Backups"
     ,"description":"The menu item to load tree items from disk"
   }
+  , "menuDeleteAllClosedWindows": {
+    "message": "Alle geschlossenen Knoten löschen"
+    ,"description":"The menu item to delete all closed-window nodes from the tree"
+  }
+  , "dlgpDeleteAllClosedWindows": {
+    "message": "<b>Alle</b> geschlossenen Fenster aus dem Baum löschen? Dies kann nicht rückgängig gemacht werden."
+    ,"description":"Prompt for whether the user wants to delete every closed window from the tree at once"
+  }
   , "menuSort": {
     "message": "Sortieren"
     ,"description":"The text of the submenu with the sort options"

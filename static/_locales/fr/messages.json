@@ -190,6 +190,14 @@
     "message": "Charger le contenu d'un backup"
     ,"description":"The menu item to load tree items from disk"
   }
+  , "menuDeleteAllClosedWindows": {
+    "message": "Supprimer tous les nœuds fermés"
+    ,"description":"The menu item to delete all closed-window nodes from the tree"
+  }
+  , "dlgpDeleteAllClosedWindows": {
+    "message": "Supprimer <b>toutes</b> les fenêtres fermées de l'arbre ? Cette action est irréversible."
+    ,"description":"Prompt for whether the user wants to delete every closed window from the tree at once"
+  }
   , "menuSort": {
     "message": "Trier"
     ,"description":"The text of the submenu with the sort options"

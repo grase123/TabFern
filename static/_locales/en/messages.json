@@ -203,6 +203,14 @@
     "message": "Load contents of a backup"
     ,"description":"The menu item to load tree items from disk"
   }
+  , "menuDeleteAllClosedWindows": {
+    "message": "Delete all closed nodes"
+    ,"description":"The menu item to delete all closed-window nodes from the tree"
+  }
+  , "dlgpDeleteAllClosedWindows": {
+    "message": "Delete <b>all</b> closed windows from the tree?  This cannot be undone."
+    ,"description":"Prompt for whether the user wants to delete every closed window from the tree at once"
+  }
   , "menuSort": {
     "message": "Sort"
     ,"description":"The text of the submenu with the sort options"

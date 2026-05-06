@@ -3067,6 +3067,30 @@ function hamRestoreLastDeleted() {
     lastDeletedWindow = [];
 } //hamRestoreLastDeleted
 
+function hamDeleteAllClosedWindows() {
+    function doDelete() {
+        delete_all_closed_nodes(true);
+    }
+
+    if (!S.getBool(S.CONFIRM_DEL_OF_ALL_CLOSED)) {
+        doDelete();
+        return;
+    }
+
+    showConfirmationModalDialog(_T("dlgpDeleteAllClosedWindows"))
+        .val((result) => {
+            if (!result) return;
+
+            if (result.reason !== "cancel" && result.notAgain) {
+                S.set(S.CONFIRM_DEL_OF_ALL_CLOSED, false);
+            }
+
+            if (result.reason === "yes") {
+                doDelete();
+            }
+        });
+} //hamDeleteAllClosedWindows
+
 function hamExpandAll() {
     T.treeobj.open_all();
 } //hamExpandAll()
@@ -3171,6 +3195,13 @@ function getHamburgerMenuItems(node, _unused_proxyfunc, e) {
         label: _T("menuLoadBackupContents"),
         action: hamRestoreFromBackup,
         icon: "fa fa-folder-open-o",
+        separator_after: true,
+    };
+
+    items.deleteAllClosedItem = {
+        label: _T("menuDeleteAllClosedWindows"),
+        action: hamDeleteAllClosedWindows,
+        icon: "fa fa-trash-o",
         separator_after: true,
     };
 
