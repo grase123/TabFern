@@ -3195,6 +3195,77 @@ function hamSortOpenToTop() {
     }
 } //hamSortOpenToTop()
 
+/// Bulk operation: close every open window and save them all as sessions.
+/// For each open window, calls actionCloseWindowButDoNotSaveTree_internal,
+/// which marks the window as kept (W_KEEP), closes it in Chrome, and turns
+/// the corresponding tree node into a closed/saved one.  All closures are
+/// chained sequentially via ASQ; saveTree() is invoked once at the end.
+function hamCloseAllAndSave() {
+    let root = T.root_node();
+    if (!root) return;
+
+    let openNodes = [];
+    let unsavedCount = 0;
+    for (let child_id of root.children) {
+        let val = D.windows.by_node_id(child_id);
+        if (val && val.isOpen) {
+            openNodes.push({
+                id: child_id,
+                node: T.treeobj.get_node(child_id),
+            });
+            if (val.keep === K.WIN_NOKEEP) unsavedCount++;
+        }
+    }
+
+    if (openNodes.length === 0) return;
+
+    async function doClose() {
+        for (let n of openNodes) {
+            let val = D.windows.by_node_id(n.id);
+            if (!val || !val.isOpen || !val.win) continue;
+
+            let win_id = val.win.id;
+
+            val.isClosing = true;
+            M.remember(n.id);
+            for (let tab_node_id of n.node.children) {
+                M.markTabAsClosed(tab_node_id);
+            }
+            await new Promise((resolve) => {
+                chrome.windows.remove(win_id, () => {
+                    void chrome.runtime.lastError;
+                    resolve();
+                });
+            });
+            M.markWinAsClosed(val);
+        }
+
+        T.treeobj.clear_flags();
+        saveTree();
+    }
+
+    if (!S.getBool(S.CONFIRM_CLOSE_ALL_AND_SAVE)) {
+        doClose();
+        return;
+    }
+
+    let msg = _T("dlgpCloseAllAndSave", [
+        String(openNodes.length),
+        String(unsavedCount),
+    ]);
+    showConfirmationModalDialog(msg).val((result) => {
+        if (!result) return;
+
+        if (result.reason !== "cancel" && result.notAgain) {
+            S.set(S.CONFIRM_CLOSE_ALL_AND_SAVE, false);
+        }
+
+        if (result.reason === "yes") {
+            doClose();
+        }
+    });
+} //hamCloseAllAndSave()
+
 // You can call proxyfunc with the items or just return them, so we just
 // return them.
 //
@@ -3312,6 +3383,27 @@ function getHamburgerMenuItems(node, _unused_proxyfunc, e) {
             },
         }, //submenu
     }; //sortItem
+
+    // Show "Close all and save" only when at least one window is open.
+    let anyOpen = false;
+    let root = T.root_node();
+    if (root) {
+        for (let child_id of root.children) {
+            let val = D.windows.by_node_id(child_id);
+            if (val && val.isOpen) {
+                anyOpen = true;
+                break;
+            }
+        }
+    }
+    if (anyOpen) {
+        items.closeAllAndSaveItem = {
+            label: _T("menuCloseAllAndSave"),
+            action: hamCloseAllAndSave,
+            icon: "fa fa-power-off",
+            separator_after: true,
+        };
+    }
 
     items.expandItem = {
         label: _T("menuExpandAll"),

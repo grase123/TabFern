@@ -207,6 +207,24 @@
     "message": "Replace from backup"
     ,"description":"The menu item to replace all closed windows with the contents of a backup file"
   }
+  , "menuCloseAllAndSave": {
+    "message": "Close all open windows and save"
+    ,"description":"The menu item to close every open window and save them all as sessions in the tree"
+  }
+  , "dlgpCloseAllAndSave": {
+    "message": "Close all $N$ open window(s) and save them as sessions?  $M$ of them are currently unsaved and will be marked as saved.  Tabs will be closed in Chrome but kept in the TabFern tree."
+    ,"description":"Prompt for whether the user wants to close every open window and save them all"
+    ,"placeholders":{
+      "n": {
+        "content": "$1"
+        ,"example": "(total number of currently open windows)"
+      }
+      ,"m": {
+        "content": "$2"
+        ,"example": "(number of currently open windows that are unsaved)"
+      }
+    }
+  }
   , "dlgpReplaceFromBackup": {
     "message": "Replace all closed windows with the contents of a backup file?  All currently closed windows will be deleted, then the backup will be loaded.  Open windows are not affected.  This cannot be undone."
     ,"description":"Prompt for whether the user wants to delete all closed windows and load a backup file in their place"

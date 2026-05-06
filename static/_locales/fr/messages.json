@@ -194,6 +194,24 @@
     "message": "Remplacer depuis un backup"
     ,"description":"The menu item to replace all closed windows with the contents of a backup file"
   }
+  , "menuCloseAllAndSave": {
+    "message": "Fermer toutes les fenêtres ouvertes et enregistrer"
+    ,"description":"The menu item to close every open window and save them all as sessions in the tree"
+  }
+  , "dlgpCloseAllAndSave": {
+    "message": "Fermer les $N$ fenêtre(s) ouverte(s) et les enregistrer comme sessions ? $M$ d'entre elles ne sont pas encore enregistrées et le seront. Les onglets seront fermés dans Chrome mais conservés dans l'arbre TabFern."
+    ,"description":"Prompt for whether the user wants to close every open window and save them all"
+    ,"placeholders":{
+      "n": {
+        "content": "$1"
+        ,"example": "(total number of currently open windows)"
+      }
+      ,"m": {
+        "content": "$2"
+        ,"example": "(number of currently open windows that are unsaved)"
+      }
+    }
+  }
   , "dlgpReplaceFromBackup": {
     "message": "Remplacer toutes les fenêtres fermées par le contenu d'un fichier de backup ? Toutes les fenêtres fermées seront supprimées, puis le backup sera chargé. Les fenêtres ouvertes ne sont pas affectées. Cette action est irréversible."
     ,"description":"Prompt for whether the user wants to delete all closed windows and load a backup file in their place"

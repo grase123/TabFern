@@ -222,6 +222,14 @@ setting_definitions.push(
 
         {
             "tab": future_i18n("Behaviour"),
+            "group": future_i18n("Closing windows"),
+            "name": S.CONFIRM_CLOSE_ALL_AND_SAVE,
+            "type": "checkbox",
+            "label": future_i18n('Prompt for confirmation before <b>closing all open windows</b> and saving them as sessions'),
+        },
+
+        {
+            "tab": future_i18n("Behaviour"),
             "group": future_i18n("Deleting tabs"),
             "name": S.CONFIRM_DEL_OF_SAVED_TABS,
             "type": "checkbox",
