@@ -190,6 +190,14 @@
     "message": "загрузить содержания резерва"
     ,"description":"The menu item to load tree items from disk"
   }
+  , "menuReplaceFromBackup": {
+    "message": "заменить из резерва"
+    ,"description":"The menu item to replace all closed windows with the contents of a backup file"
+  }
+  , "dlgpReplaceFromBackup": {
+    "message": "Заменить все закрытые окна содержимым резервной копии? Все закрытые окна будут удалены, затем будет загружен бэкап. Открытые окна не пострадают. Это действие нельзя отменить."
+    ,"description":"Prompt for whether the user wants to delete all closed windows and load a backup file in their place"
+  }
   , "menuDeleteAllClosedWindows": {
     "message": "удалить все закрытые узлы"
     ,"description":"The menu item to delete all closed-window nodes from the tree"

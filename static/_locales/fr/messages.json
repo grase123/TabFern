@@ -190,6 +190,14 @@
     "message": "Charger le contenu d'un backup"
     ,"description":"The menu item to load tree items from disk"
   }
+  , "menuReplaceFromBackup": {
+    "message": "Remplacer depuis un backup"
+    ,"description":"The menu item to replace all closed windows with the contents of a backup file"
+  }
+  , "dlgpReplaceFromBackup": {
+    "message": "Remplacer toutes les fenêtres fermées par le contenu d'un fichier de backup ? Toutes les fenêtres fermées seront supprimées, puis le backup sera chargé. Les fenêtres ouvertes ne sont pas affectées. Cette action est irréversible."
+    ,"description":"Prompt for whether the user wants to delete all closed windows and load a backup file in their place"
+  }
   , "menuDeleteAllClosedWindows": {
     "message": "Supprimer tous les nœuds fermés"
     ,"description":"The menu item to delete all closed-window nodes from the tree"

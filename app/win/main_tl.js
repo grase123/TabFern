@@ -3039,6 +3039,70 @@ function hamRestoreFromBackup() {
     }
 } //hamRestoreFromBackup()
 
+/// Replace all closed windows with the contents of a backup file.
+/// Equivalent to delete_all_closed_nodes() followed by hamRestoreFromBackup(),
+/// but parses the backup first so that a corrupted file does not leave the
+/// tree empty.  Open windows are never touched.
+function hamReplaceFromBackup() {
+    function pickAndApply() {
+        function processFile(text, filename) {
+            // Parse first; if this throws, the tree is untouched.
+            let parsed;
+            try {
+                parsed = JSON.parse(text);
+            } catch (e) {
+                const errmsg = _T(
+                    "errCouldNotParseFile",
+                    filename,
+                    e && e.message ? e.message : String(e)
+                );
+                log.warn({ [errmsg + " (exception thrown)"]: e });
+                window.alert(errmsg);
+                return;
+            }
+
+            // Parse OK — clear closed windows, then load the backup.
+            delete_all_closed_nodes(true);
+
+            const ok = loadSavedWindowsFromData(parsed);
+            if (!ok) {
+                const errmsg = _T("errCouldNotLoadFile", filename, "");
+                log.warn({ [errmsg]: "load failed after parse" });
+                window.alert(errmsg);
+            }
+
+            saveTree();
+        }
+
+        try {
+            let importer = new Modules.importer(document, ".tabfern");
+            importer.getFileAsString(processFile);
+        } catch (e) {
+            const errmsg = _T("errCouldNotRunImporter", e);
+            log.warn({ [errmsg]: e });
+            window.alert(errmsg);
+        }
+    } //pickAndApply()
+
+    if (!S.getBool(S.CONFIRM_REPLACE_FROM_BACKUP)) {
+        pickAndApply();
+        return;
+    }
+
+    showConfirmationModalDialog(_T("dlgpReplaceFromBackup"))
+        .val((result) => {
+            if (!result) return;
+
+            if (result.reason !== "cancel" && result.notAgain) {
+                S.set(S.CONFIRM_REPLACE_FROM_BACKUP, false);
+            }
+
+            if (result.reason === "yes") {
+                pickAndApply();
+            }
+        });
+} //hamReplaceFromBackup()
+
 function hamRestoreLastDeleted() {
     if (!Array.isArray(lastDeletedWindow) || lastDeletedWindow.length <= 0)
         return;
@@ -3195,6 +3259,11 @@ function getHamburgerMenuItems(node, _unused_proxyfunc, e) {
         label: _T("menuLoadBackupContents"),
         action: hamRestoreFromBackup,
         icon: "fa fa-folder-open-o",
+    };
+    items.replaceFromBackupItem = {
+        label: _T("menuReplaceFromBackup"),
+        action: hamReplaceFromBackup,
+        icon: "fa fa-exchange",
         separator_after: true,
     };
 
