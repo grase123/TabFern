@@ -3051,11 +3051,14 @@ function hamReplaceFromBackup() {
             try {
                 parsed = JSON.parse(text);
             } catch (e) {
-                const errmsg = _T(
-                    "errCouldNotParseFile",
-                    filename,
-                    e && e.message ? e.message : String(e)
-                );
+                // chrome.i18n.getMessage takes substitutions as an ARRAY
+                // (or a single string), not as a varargs list — passing
+                // separate args silently drops everything past the first.
+                const errstr = e && e.message ? String(e.message) : String(e);
+                const errmsg = _T("errCouldNotParseFile", [
+                    String(filename),
+                    errstr,
+                ]);
                 log.warn({ [errmsg + " (exception thrown)"]: e });
                 window.alert(errmsg);
                 return;
