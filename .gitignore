@@ -49,5 +49,6 @@ foo/
 *.map
 *.txt
 
-# External dependencies (managed by npm)
-/node_modules/
+# External dependencies (managed by npm) — at any depth
+# (covers root node_modules and nested ones inside vendored plugins)
+**/node_modules/

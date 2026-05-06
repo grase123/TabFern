@@ -65,6 +65,6 @@
     "prettier": "2.8.8",
     "replacer-brunch": "github:cxw42/replacer-brunch",
     "replacestream": "^4.0.3",
-    "sass-brunch": "^3.0.1"
+    "sass-brunch": "file:./tools/sass-brunch"
   }
 }

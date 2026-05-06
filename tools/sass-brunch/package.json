@@ -1,0 +1,21 @@
+{
+  "name": "sass-brunch",
+  "version": "3.1.0-tf.1",
+  "description": "Local fork of sass-brunch migrated to the Modern Sass JS API. Removes the legacy renderSync() call and the abandoned node-sass-glob-importer dependency. Used by TabFern.",
+  "main": "index.js",
+  "author": "Paul Miller (original) / TabFern fork",
+  "license": "MIT",
+  "files": [
+    "index.js"
+  ],
+  "dependencies": {
+    "anymatch": "~3.1.1",
+    "postcss": "^7.0.27",
+    "postcss-modules": "^4.3.1",
+    "progeny": "^0.8.0",
+    "sass": "^1.50.0"
+  },
+  "engines": {
+    "node": ">=14"
+  }
+}
