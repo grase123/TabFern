@@ -237,6 +237,34 @@
     "message": "Delete <b>all</b> closed windows from the tree?  This cannot be undone."
     ,"description":"Prompt for whether the user wants to delete every closed window from the tree at once"
   }
+  , "menuRemoveDuplicates": {
+    "message": "Remove duplicate windows"
+    ,"description":"The menu item to remove duplicate windows (windows with identical ordered tab URLs) from the tree"
+  }
+  , "dlgpRemoveDuplicates": {
+    "message": "Remove $N$ duplicate window(s)?  Open windows are kept; closed duplicates are removed.  This cannot be undone."
+    ,"description":"Prompt for whether the user wants to remove duplicate windows from the tree"
+    ,"placeholders":{
+      "n": {
+        "content": "$1"
+        ,"example": "(number of duplicate windows that will be removed)"
+      }
+    }
+  }
+  , "infoRemoveDuplicatesNone": {
+    "message": "No duplicate windows were found."
+    ,"description":"Message shown when the Remove duplicates command finds no duplicates"
+  }
+  , "infoRemoveDuplicatesAllOpen": {
+    "message": "$N$ group(s) of duplicate windows have multiple open instances and were skipped.  Close the extra Chrome windows manually if you want to deduplicate them."
+    ,"description":"Message shown when one or more duplicate groups consist entirely of open Chrome windows and are therefore skipped"
+    ,"placeholders":{
+      "n": {
+        "content": "$1"
+        ,"example": "(number of skipped groups)"
+      }
+    }
+  }
   , "menuSort": {
     "message": "Sort"
     ,"description":"The text of the submenu with the sort options"

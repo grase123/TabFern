@@ -224,6 +224,34 @@
     "message": "Удалить <b>все</b> закрытые окна из дерева? Это действие нельзя отменить."
     ,"description":"Prompt for whether the user wants to delete every closed window from the tree at once"
   }
+  , "menuRemoveDuplicates": {
+    "message": "удалить дубликаты окон"
+    ,"description":"The menu item to remove duplicate windows (windows with identical ordered tab URLs) from the tree"
+  }
+  , "dlgpRemoveDuplicates": {
+    "message": "Удалить $N$ окон-дубликатов? Открытые окна сохраняются, закрытые дубликаты удаляются. Это действие нельзя отменить."
+    ,"description":"Prompt for whether the user wants to remove duplicate windows from the tree"
+    ,"placeholders":{
+      "n": {
+        "content": "$1"
+        ,"example": "(number of duplicate windows that will be removed)"
+      }
+    }
+  }
+  , "infoRemoveDuplicatesNone": {
+    "message": "Дубликаты окон не найдены."
+    ,"description":"Message shown when the Remove duplicates command finds no duplicates"
+  }
+  , "infoRemoveDuplicatesAllOpen": {
+    "message": "$N$ групп(ы) дубликатов содержат несколько открытых окон и были пропущены. Закройте лишние окна Chrome вручную, если хотите устранить дубликаты."
+    ,"description":"Message shown when one or more duplicate groups consist entirely of open Chrome windows and are therefore skipped"
+    ,"placeholders":{
+      "n": {
+        "content": "$1"
+        ,"example": "(number of skipped groups)"
+      }
+    }
+  }
   , "menuSort": {
     "message": "сортировка"
     ,"description":"The text of the submenu with the sort options"

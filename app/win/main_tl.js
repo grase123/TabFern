@@ -3269,6 +3269,175 @@ function hamCloseAllAndSave() {
     });
 } //hamCloseAllAndSave()
 
+// Tracking / session parameters stripped from URLs before duplicate
+// detection (task-006 fix #1).  Generic list — any host.  `utm_*` is
+// matched by prefix separately.
+const DEDUP_TRACKING_PARAMS = new Set([
+    "fbclid", "gclid", "dclid", "mc_eid", "_ga", "yclid", "igshid",
+    "ref", "ref_src", "rlz",
+    // Google Search session noise — also stripped on non-search hosts
+    // in case it leaks elsewhere.
+    "ei", "ved", "sca_esv", "biw", "bih", "bvm", "sclient", "sourceid",
+    "uact", "oq", "gs_lp", "gs_lcrp", "gs_ssp", "usg", "iflsig", "aqs",
+]);
+
+// On google.com/search we keep ONLY these params and discard the rest
+// (the URL there is mostly session bookkeeping).
+const DEDUP_GOOGLE_SEARCH_KEEP = new Set(["q", "hl", "tbm"]);
+
+/// Canonicalize a tab URL for duplicate-detection: parse, drop
+/// tracking/session query params, sort the remainder for stability.
+/// Non-http(s) URLs (chrome://, about:, file:, malformed) are returned
+/// as-is.  See task-006 fix #1.
+function canonicalizeURLForDedup(rawUrl) {
+    if (!rawUrl) return rawUrl;
+
+    let parsed;
+    try {
+        parsed = new URL(rawUrl);
+    } catch (e) {
+        return rawUrl;
+    }
+
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+        return rawUrl;
+    }
+
+    let isGoogleSearch =
+        /(^|\.)google\./i.test(parsed.hostname) &&
+        parsed.pathname === "/search";
+
+    let entries = [];
+    for (let [k, v] of parsed.searchParams.entries()) {
+        if (isGoogleSearch) {
+            if (DEDUP_GOOGLE_SEARCH_KEEP.has(k)) entries.push([k, v]);
+        } else {
+            if (k.toLowerCase().startsWith("utm_")) continue;
+            if (DEDUP_TRACKING_PARAMS.has(k)) continue;
+            entries.push([k, v]);
+        }
+    }
+
+    entries.sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
+
+    let qs = entries
+        .map(([k, v]) => encodeURIComponent(k) + "=" + encodeURIComponent(v))
+        .join("&");
+
+    return (
+        parsed.origin +
+        parsed.pathname +
+        (qs ? "?" + qs : "") +
+        (parsed.hash || "")
+    );
+} //canonicalizeURLForDedup()
+
+/// Find groups of windows whose ordered tab-URL list is identical, and
+/// delete the duplicates.  Winner-selection rules per group:
+///   - If at least one window in the group is open, the open one wins and
+///     all closed duplicates are deleted.
+///   - If all windows in the group are closed, the topmost (first in tree)
+///     wins; the rest are deleted.
+///   - If two or more windows in the group are open, skip the group and
+///     report it — these are distinct physical Chrome windows that the user
+///     intentionally has open.  Closing them is left to the user.
+function hamRemoveDuplicateWindows() {
+    let root = T.root_node();
+    if (!root) return;
+
+    // Group windows in tree order by hash of ordered raw_url list.
+    // Map<hash_string, [{node_id, val, isOpen}, ...]>
+    let groups = new Map();
+    for (let child_id of root.children) {
+        if (child_id === T.holding_node_id) continue;
+
+        let val = D.windows.by_node_id(child_id);
+        if (!val) continue;
+
+        let node = T.treeobj.get_node(child_id);
+        if (!node || !node.children || node.children.length === 0) continue;
+
+        let urls = [];
+        let consistent = true;
+        for (let tab_node_id of node.children) {
+            let url = D.tabs.by_node_id(tab_node_id, "raw_url");
+            if (!url) {
+                consistent = false;
+                break;
+            }
+            urls.push(canonicalizeURLForDedup(url));
+        }
+        if (!consistent) continue;
+
+        let key = M.orderedHashOfStrings(urls);
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push({
+            node_id: child_id,
+            val,
+            isOpen: !!val.isOpen,
+        });
+    }
+
+    // Decide which windows to delete.
+    let toDelete = [];
+    let skippedMultiOpenGroups = 0;
+    for (let group of groups.values()) {
+        if (group.length < 2) continue;
+
+        let openItems = group.filter((g) => g.isOpen);
+        let closedItems = group.filter((g) => !g.isOpen);
+
+        if (openItems.length >= 2) {
+            ++skippedMultiOpenGroups;
+            continue;
+        }
+
+        if (openItems.length === 1) {
+            // Open window is the winner; remove all closed duplicates.
+            for (let item of closedItems) toDelete.push(item);
+        } else {
+            // All closed; keep the first (topmost) entry.
+            for (let i = 1; i < group.length; ++i) toDelete.push(group[i]);
+        }
+    }
+
+    if (toDelete.length === 0) {
+        if (skippedMultiOpenGroups > 0) {
+            window.alert(
+                _T("infoRemoveDuplicatesAllOpen", [
+                    String(skippedMultiOpenGroups),
+                ])
+            );
+        } else {
+            window.alert(_T("infoRemoveDuplicatesNone"));
+        }
+        return;
+    }
+
+    function doRemove() {
+        for (let item of toDelete) {
+            let n = T.treeobj.get_node(item.node_id);
+            if (!n) continue;
+            actionDeleteWindow(item.node_id, n, null, null, null, true);
+        }
+        if (skippedMultiOpenGroups > 0) {
+            window.alert(
+                _T("infoRemoveDuplicatesAllOpen", [
+                    String(skippedMultiOpenGroups),
+                ])
+            );
+        }
+    }
+
+    showConfirmationModalDialog(
+        _T("dlgpRemoveDuplicates", [String(toDelete.length)]),
+        false // no DNSA — destructive enough to always confirm
+    ).val((result) => {
+        if (!result) return;
+        if (result.reason === "yes") doRemove();
+    });
+} //hamRemoveDuplicateWindows()
+
 // You can call proxyfunc with the items or just return them, so we just
 // return them.
 //
@@ -3345,6 +3514,12 @@ function getHamburgerMenuItems(node, _unused_proxyfunc, e) {
         label: _T("menuDeleteAllClosedWindows"),
         action: hamDeleteAllClosedWindows,
         icon: "fa fa-trash-o",
+    };
+
+    items.removeDuplicatesItem = {
+        label: _T("menuRemoveDuplicates"),
+        action: hamRemoveDuplicateWindows,
+        icon: "fa fa-clone",
         separator_after: true,
     };
 

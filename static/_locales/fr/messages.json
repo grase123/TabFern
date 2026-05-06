@@ -224,6 +224,34 @@
     "message": "Supprimer <b>toutes</b> les fenêtres fermées de l'arbre ? Cette action est irréversible."
     ,"description":"Prompt for whether the user wants to delete every closed window from the tree at once"
   }
+  , "menuRemoveDuplicates": {
+    "message": "Supprimer les fenêtres en double"
+    ,"description":"The menu item to remove duplicate windows (windows with identical ordered tab URLs) from the tree"
+  }
+  , "dlgpRemoveDuplicates": {
+    "message": "Supprimer $N$ fenêtre(s) en double ? Les fenêtres ouvertes sont conservées ; les doublons fermés sont supprimés. Cette action est irréversible."
+    ,"description":"Prompt for whether the user wants to remove duplicate windows from the tree"
+    ,"placeholders":{
+      "n": {
+        "content": "$1"
+        ,"example": "(number of duplicate windows that will be removed)"
+      }
+    }
+  }
+  , "infoRemoveDuplicatesNone": {
+    "message": "Aucune fenêtre en double n'a été trouvée."
+    ,"description":"Message shown when the Remove duplicates command finds no duplicates"
+  }
+  , "infoRemoveDuplicatesAllOpen": {
+    "message": "$N$ groupe(s) de fenêtres en double ont plusieurs instances ouvertes et ont été ignoré(s). Fermez les fenêtres Chrome supplémentaires manuellement pour les dédoublonner."
+    ,"description":"Message shown when one or more duplicate groups consist entirely of open Chrome windows and are therefore skipped"
+    ,"placeholders":{
+      "n": {
+        "content": "$1"
+        ,"example": "(number of skipped groups)"
+      }
+    }
+  }
   , "menuSort": {
     "message": "Trier"
     ,"description":"The text of the submenu with the sort options"
