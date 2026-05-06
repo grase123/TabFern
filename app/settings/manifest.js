@@ -204,6 +204,21 @@ setting_definitions.push(
             "type": "checkbox",
             "label": future_i18n('Prompt for confirmation before deleting <b>unsaved</b> windows'),
         },
+        {
+            "tab": future_i18n("Behaviour"),
+            "group": future_i18n("Deleting windows"),
+            "name": S.CONFIRM_DEL_OF_ALL_CLOSED,
+            "type": "checkbox",
+            "label": future_i18n('Prompt for confirmation before deleting <b>all closed</b> windows'),
+        },
+
+        {
+            "tab": future_i18n("Behaviour"),
+            "group": future_i18n("Backups"),
+            "name": S.CONFIRM_REPLACE_FROM_BACKUP,
+            "type": "checkbox",
+            "label": future_i18n('Prompt for confirmation before <b>replacing</b> closed windows from a backup'),
+        },
 
         {
             "tab": future_i18n("Behaviour"),
