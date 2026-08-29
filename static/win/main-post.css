@@ -62,6 +62,13 @@ li.ephemeral-recovered, .tfs-recovered {
     background: darkslategray !important;
 }
 
+/* Marker on windows that were open when a backup was taken.  Drawn as part of
+ * the label, so it disappears as soon as the window is opened again. */
+.tf-was-open {
+    color: #7fb2d9;
+    font-style: italic;
+}
+
 /* divider color, light theme */
 .jstree-default .tfs-top-bordered {
     border-top: 1px solid #00b;

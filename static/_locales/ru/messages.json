@@ -151,7 +151,12 @@
     "message": " (Восстановленные)"
     ,"description":"Added to the end of the label in the tree for a window that was autosaved"
   }
-  ,"labelUnknownTitle": {
+  
+  ,"labelWasOpen": {
+    "message": "(было открыто)"
+    ,"description":"Marker shown next to a window that was open when the backup was taken, until the user opens it again"
+  }
+,"labelUnknownTitle": {
     "message": "## Без заголовка ##"
     ,"description": "Label for a tab's tree node if we can't find a title for it"
   }

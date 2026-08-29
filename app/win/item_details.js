@@ -82,6 +82,9 @@ windows = multidex(
         "isClosing", // true if the window is currently being closed
         // by TF itself, as opposed to in response to
         // something done by the browser.
+        "was_open", // true while the window carries the was-open marker,
+        // i.e. it was open when a loaded backup was taken and
+        // the user hasn't opened it since.
     ]
 );
 

@@ -30,6 +30,7 @@ module.exports = {
     // Class on a .jstree-node to indicate its actions should be shown
 
     BULLET_CLASS: "tf-bullet", // class on spans showing bullets for items
+    WAS_OPEN_CLASS: "tf-was-open", // class on the "was open" marker span
     CLASS_RECOVERED: "ephemeral-recovered",
 
     INIT_TIME_ALLOWED_MS: 3000, // After this time, if init isn't done,

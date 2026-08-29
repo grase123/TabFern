@@ -278,6 +278,19 @@ me.get_html_label = function (vorny) {
     } //endif there's a raw_bullet
 
     retval += Esc.escape(raw_text);
+
+    // Windows that were open when a backup was taken carry a marker until
+    // the user opens them again.  It is drawn here rather than stored in
+    // raw_title, so the user's own title is never touched.
+    if (val.was_open) {
+        retval +=
+            '<span class="' +
+            K.WAS_OPEN_CLASS +
+            '">&nbsp;' +
+            Esc.escape(_T("labelWasOpen")) +
+            "</span>";
+    }
+
     return retval;
 }; //get_html_label()
 
@@ -875,6 +888,10 @@ me.markWinAsOpen = function (win_vorny, cwin) {
     val.win = cwin;
     // raw_title unchanged (TODO is this the Right Thing?)
     val.isOpen = true;
+    val.was_open = false;
+    // The window is open again, so it no longer needs the was-open marker.
+    // This is the single place where a window becomes open, so clearing the
+    // flag here covers every path.
     // keep unchanged
     // raw_bullet unchanged
     // isClosing unchanged - TODO is this the Right Thing?

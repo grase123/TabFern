@@ -415,6 +415,8 @@ function saveTree(save_ephemeral_windows = true, cbk = undefined) {
         result_win.tabs = [];
         result_win.ordered_url_hash = win_val.ordered_url_hash || undefined;
         if (is_ephemeral) result_win.ephemeral = true;
+        if (win_val.isOpen) result_win.open = true;
+        if (win_val.was_open) result_win.was_open = true;
         // Don't bother putting it in if we don't need it.
 
         // Stash the tabs.  No recursion at this time.
@@ -1460,7 +1462,12 @@ function createNodeForWindow(cwin, keep) {
 /// Create a tree node for a closed window
 /// @param win_data_v1      V1 save data for the window
 /// @return the node ID, or falsy on failure
-function createNodeForClosedWindowV1(win_data_v1) {
+/// @param options {object={}} Options.  Presently:
+/// - mark_open_windows {Boolean=false} If truthy, a window whose save data
+///     says it was open gets the was-open marker.  Used when loading a file
+///     the user picked; not used when reloading our own saved tree, where the
+///     marker is whatever it was when we saved it.
+function createNodeForClosedWindowV1(win_data_v1, options = {}) {
     let is_ephemeral = Boolean(win_data_v1.ephemeral); // missing => false
 
     let shouldCollapse = S.getBool(S.COLLAPSE_ON_STARTUP);
@@ -1489,6 +1496,12 @@ function createNodeForClosedWindowV1(win_data_v1) {
             val,
         });
     }
+
+    // Was-open marker: kept as it was saved, or put on now if we are
+    // loading a file and the window was open when that file was written.
+    val.was_open = Boolean(
+        win_data_v1.was_open || (options.mark_open_windows && win_data_v1.open)
+    );
 
     // TODO restore ordered_url_hash
 
@@ -1670,7 +1683,7 @@ var loadSavedWindowsFromData = (function () {
     /// V0 format: [win, win, ...]
     /// each win is {text: "foo", tabs: [tab, tab, ...]}
     /// each tab is {text: "foo", url: "bar"}
-    function loadSaveDataV0(data) {
+    function loadSaveDataV0(data, options) {
         let numwins = 0;
         // Make V1 data from the v0 data and pass it along the chain
         for (let v0_win of data) {
@@ -1681,7 +1694,7 @@ var loadSavedWindowsFromData = (function () {
                 let v1_tab = { raw_title: v0_tab.text, raw_url: v0_tab.url };
                 v1_win.tabs.push(v1_tab);
             }
-            createNodeForClosedWindowV1(v1_win);
+            createNodeForClosedWindowV1(v1_win, options);
             ++numwins;
         }
         return numwins; //load successful
@@ -1696,12 +1709,12 @@ var loadSavedWindowsFromData = (function () {
     /// Each tab is {raw_title: "foo", raw_url: "bar"}
     ///     A V1 tab may optionally include:
     ///     - bordered:<truthy> (default false) to mark windows with borders
-    function loadSaveDataV1(data) {
+    function loadSaveDataV1(data, options) {
         if (!data.tree) return false;
         //log.info({'loadSaveDataV1':data});
         let numwins = 0;
         for (let win_data_v1 of data.tree) {
-            createNodeForClosedWindowV1(win_data_v1);
+            createNodeForClosedWindowV1(win_data_v1, options);
             ++numwins;
         }
         return numwins;
@@ -1714,7 +1727,7 @@ var loadSavedWindowsFromData = (function () {
     /// Populate the tree from the save data.
     /// TODO throw on failure, so that the caller can report the details of
     /// the error if desired.
-    return function loadSavedWindowsFromData_inner(data) {
+    return function loadSavedWindowsFromData_inner(data, options = {}) {
         let succeeded = false;
         let loader_retval; // # of wins loaded
 
@@ -1746,7 +1759,7 @@ var loadSavedWindowsFromData = (function () {
                 try {
                     T.treeobj.suppress_redraw(true); // EXPERIMENTAL
                     T.do_not_rjustify = true;
-                    loader_retval = versionLoaders[vernum](data);
+                    loader_retval = versionLoaders[vernum](data, options);
                 } catch (e) {
                     log.error(
                         `Error loading version-${vernum} save data: ${e}`
@@ -3009,7 +3022,9 @@ function hamRestoreFromBackup() {
         let ok;
         try {
             let parsed = JSON.parse(text);
-            ok = loadSavedWindowsFromData(parsed);
+            ok = loadSavedWindowsFromData(parsed, {
+                mark_open_windows: true,
+            });
             if (!ok) {
                 const errmsg = _T("errCouldNotLoadFile", filename, e);
                 log.warn({ [errmsg]: e });
@@ -3067,7 +3082,9 @@ function hamReplaceFromBackup() {
             // Parse OK — clear closed windows, then load the backup.
             delete_all_closed_nodes(true);
 
-            const ok = loadSavedWindowsFromData(parsed);
+            const ok = loadSavedWindowsFromData(parsed, {
+                mark_open_windows: true,
+            });
             if (!ok) {
                 const errmsg = _T("errCouldNotLoadFile", filename, "");
                 log.warn({ [errmsg]: "load failed after parse" });
@@ -3092,18 +3109,17 @@ function hamReplaceFromBackup() {
         return;
     }
 
-    showConfirmationModalDialog(_T("dlgpReplaceFromBackup"))
-        .val((result) => {
-            if (!result) return;
+    showConfirmationModalDialog(_T("dlgpReplaceFromBackup")).val((result) => {
+        if (!result) return;
 
-            if (result.reason !== "cancel" && result.notAgain) {
-                S.set(S.CONFIRM_REPLACE_FROM_BACKUP, false);
-            }
+        if (result.reason !== "cancel" && result.notAgain) {
+            S.set(S.CONFIRM_REPLACE_FROM_BACKUP, false);
+        }
 
-            if (result.reason === "yes") {
-                pickAndApply();
-            }
-        });
+        if (result.reason === "yes") {
+            pickAndApply();
+        }
+    });
 } //hamReplaceFromBackup()
 
 function hamRestoreLastDeleted() {
@@ -3144,8 +3160,8 @@ function hamDeleteAllClosedWindows() {
         return;
     }
 
-    showConfirmationModalDialog(_T("dlgpDeleteAllClosedWindows"))
-        .val((result) => {
+    showConfirmationModalDialog(_T("dlgpDeleteAllClosedWindows")).val(
+        (result) => {
             if (!result) return;
 
             if (result.reason !== "cancel" && result.notAgain) {
@@ -3155,7 +3171,8 @@ function hamDeleteAllClosedWindows() {
             if (result.reason === "yes") {
                 doDelete();
             }
-        });
+        }
+    );
 } //hamDeleteAllClosedWindows
 
 function hamExpandAll() {
@@ -3273,12 +3290,34 @@ function hamCloseAllAndSave() {
 // detection (task-006 fix #1).  Generic list — any host.  `utm_*` is
 // matched by prefix separately.
 const DEDUP_TRACKING_PARAMS = new Set([
-    "fbclid", "gclid", "dclid", "mc_eid", "_ga", "yclid", "igshid",
-    "ref", "ref_src", "rlz",
+    "fbclid",
+    "gclid",
+    "dclid",
+    "mc_eid",
+    "_ga",
+    "yclid",
+    "igshid",
+    "ref",
+    "ref_src",
+    "rlz",
     // Google Search session noise — also stripped on non-search hosts
     // in case it leaks elsewhere.
-    "ei", "ved", "sca_esv", "biw", "bih", "bvm", "sclient", "sourceid",
-    "uact", "oq", "gs_lp", "gs_lcrp", "gs_ssp", "usg", "iflsig", "aqs",
+    "ei",
+    "ved",
+    "sca_esv",
+    "biw",
+    "bih",
+    "bvm",
+    "sclient",
+    "sourceid",
+    "uact",
+    "oq",
+    "gs_lp",
+    "gs_lcrp",
+    "gs_ssp",
+    "usg",
+    "iflsig",
+    "aqs",
 ]);
 
 // On google.com/search we keep ONLY these params and discard the rest
