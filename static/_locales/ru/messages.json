@@ -262,7 +262,7 @@
     ,"description":"The menu item to reassign window numbers (wids) as 1..N in the current tree order"
   }
   , "dlgpRenumberWindows": {
-    "message": "Перенумеровать все окна как 1..N сверху вниз? Номера окон в ранее созданных отчётах устареют."
+    "message": "Перенумеровать все окна как 1..N снизу вверх? Верхнее окно получит наибольший номер, новые окна продолжат ряд. Номера окон в ранее созданных отчётах устареют."
     ,"description":"Prompt for whether the user wants to renumber all windows in tree order"
   }
   , "menuSort": {

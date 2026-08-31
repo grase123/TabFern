@@ -3541,7 +3541,10 @@ function hamRemoveDuplicateWindows() {
     });
 } //hamRemoveDuplicateWindows()
 
-/// Renumber all windows: wid = position 1..N in the current tree order.
+/// Renumber all windows: wid = position 1..N counted from the bottom of the
+/// tree, so the topmost window carries the largest number.  New windows go
+/// to the top and get max(wid)+1, so this keeps the sequence natural: the
+/// next window created simply continues the numbering.
 /// Wids are tags for human eyes, so a wholesale rewrite is legal; the price
 /// is that window numbers in previously generated external reports go stale.
 function hamRenumberWindows() {
@@ -3550,7 +3553,8 @@ function hamRenumberWindows() {
 
     function doRenumber() {
         let next = 1;
-        for (let win_node_id of root.children) {
+        for (let i = root.children.length - 1; i >= 0; --i) {
+            let win_node_id = root.children[i];
             if (win_node_id === T.holding_node_id) continue;
             let val = D.windows.by_node_id(win_node_id);
             if (!val) continue;
@@ -3696,8 +3700,9 @@ function getHamburgerMenuItems(node, _unused_proxyfunc, e) {
     items.renumberItem = {
         label: _T("menuRenumberWindows"),
         title:
-            "Reassign window numbers as 1..N in the current tree order.  " +
-            "Window numbers in previously generated reports become stale.",
+            "Reassign window numbers as 1..N from the bottom up, so new " +
+            "windows continue the numbering at the top.  Window numbers " +
+            "in previously generated reports become stale.",
         action: hamRenumberWindows,
         icon: "fa fa-list-ol",
         separator_after: true,

@@ -275,7 +275,7 @@
     ,"description":"The menu item to reassign window numbers (wids) as 1..N in the current tree order"
   }
   , "dlgpRenumberWindows": {
-    "message": "Renumber all windows as 1..N, top to bottom?  Window numbers in previously generated reports become stale."
+    "message": "Renumber all windows as 1..N, bottom to top?  The topmost window gets the largest number, and new windows continue the sequence.  Window numbers in previously generated reports become stale."
     ,"description":"Prompt for whether the user wants to renumber all windows in tree order"
   }
   , "menuSort": {
