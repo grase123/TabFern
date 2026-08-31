@@ -431,7 +431,12 @@ ul.jstree-contextmenu i {
 /* The ordinal in front of each window row.  It is not data at all: the
  * browser numbers the top-level rows itself and renumbers them on any
  * reorder, so the number can never go stale.  Tabs live in nested lists
- * and are not counted. */
+ * and are not counted.
+ *
+ * The number is drawn on the anchor, NOT on the li: the wholerow plugin's
+ * hover backdrop is an absolutely positioned div with no `top`, so it sits
+ * at its static position - and any box drawn before it on the li pushes
+ * every backdrop one line down, which highlights the wrong row on hover. */
 #maintree > ul {
     counter-reset: tf-win-ordinal;
 }
@@ -440,7 +445,7 @@ ul.jstree-contextmenu i {
     counter-increment: tf-win-ordinal;
 }
 
-#maintree > ul > li.jstree-node::before {
+#maintree > ul > li.jstree-node > a.jstree-anchor::before {
     content: counter(tf-win-ordinal);
     display: inline-block;
     min-width: 2.2em;
