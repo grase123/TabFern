@@ -421,6 +421,35 @@ ul.jstree-contextmenu i {
 }
 
 /* }}}1 */
+/* --- Window uids and ordinals ----------------------------------- {{{1 -- */
+
+/* The window's permanent id, drawn as part of the label. */
+.tf-win-uid {
+    color: #7fb2d9;
+}
+
+/* The ordinal in front of each window row.  It is not data at all: the
+ * browser numbers the top-level rows itself and renumbers them on any
+ * reorder, so the number can never go stale.  Tabs live in nested lists
+ * and are not counted. */
+#maintree > ul {
+    counter-reset: tf-win-ordinal;
+}
+
+#maintree > ul > li.jstree-node {
+    counter-increment: tf-win-ordinal;
+}
+
+#maintree > ul > li.jstree-node::before {
+    content: counter(tf-win-ordinal);
+    display: inline-block;
+    min-width: 2.2em;
+    margin-right: 2px;
+    text-align: right;
+    color: #888;
+}
+
+/* }}}1 */
 /* --- Debug ------------------------------------------------------ {{{1 -- */
 /* Debug.  These come last, so they override any equally-specific styles
  * earlier in the file. */

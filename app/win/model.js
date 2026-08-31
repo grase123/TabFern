@@ -236,6 +236,18 @@ me.get_html_label = function (vorny) {
     if (!val) return false;
 
     let retval = "";
+
+    // The window's permanent id, drawn as part of the label so raw_title
+    // itself is never touched.  Tabs have no uid, so this is windows-only.
+    if (val.uid) {
+        retval +=
+            '<span class="' +
+            K.WIN_UID_CLASS +
+            '">#' +
+            val.uid +
+            "</span>&nbsp;&nbsp;";
+    }
+
     if (val.isPinned) {
         // TODO make this optional?
         // Note: for windows, isPinned is nonexistent, thus falsy.
