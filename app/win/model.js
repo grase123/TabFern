@@ -237,14 +237,14 @@ me.get_html_label = function (vorny) {
 
     let retval = "";
 
-    // The window's permanent id, drawn as part of the label so raw_title
-    // itself is never touched.  Tabs have no uid, so this is windows-only.
-    if (val.uid) {
+    // The window's wid, drawn as part of the label so raw_title
+    // itself is never touched.  Tabs have no wid, so this is windows-only.
+    if (val.wid) {
         retval +=
             '<span class="' +
-            K.WIN_UID_CLASS +
+            K.WIN_WID_CLASS +
             '">#' +
-            val.uid +
+            val.wid +
             "</span>&nbsp;&nbsp;";
     }
 

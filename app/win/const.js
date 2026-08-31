@@ -31,7 +31,7 @@ module.exports = {
 
     BULLET_CLASS: "tf-bullet", // class on spans showing bullets for items
     WAS_OPEN_CLASS: "tf-was-open", // class on the "was open" marker span
-    WIN_UID_CLASS: "tf-win-uid", // class on the window-uid span in the label
+    WIN_WID_CLASS: "tf-win-wid", // class on the window-wid span in the label
     CLASS_RECOVERED: "ephemeral-recovered",
 
     INIT_TIME_ALLOWED_MS: 3000, // After this time, if init isn't done,

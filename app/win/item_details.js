@@ -85,9 +85,13 @@ windows = multidex(
         "was_open", // true while the window carries the was-open marker,
         // i.e. it was open when a loaded backup was taken and
         // the user hasn't opened it since.
-        "uid", // the window's permanent numeric id.  Handed out once by
-        // the monotonic counter and never reused; drawn as part of the
+        "wid", // the window's numeric tag, for human eyes.  Assigned as
+        // max(wid in tree)+1; freed numbers may be reused, and the
+        // Renumber command rewrites all of them.  Drawn as part of the
         // label, never stored in raw_title.
+        "container_id", // opaque string id assigned by external tooling
+        // (fmc).  TabFern only carries it: saved and restored verbatim,
+        // never created or interpreted here.
     ]
 );
 

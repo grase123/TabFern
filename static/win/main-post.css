@@ -421,10 +421,10 @@ ul.jstree-contextmenu i {
 }
 
 /* }}}1 */
-/* --- Window uids and ordinals ----------------------------------- {{{1 -- */
+/* --- Window wids and ordinals ----------------------------------- {{{1 -- */
 
-/* The window's permanent id, drawn as part of the label. */
-.tf-win-uid {
+/* The window's wid (human-facing tag), drawn as part of the label. */
+.tf-win-wid {
     color: #7fb2d9;
 }
 

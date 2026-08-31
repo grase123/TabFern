@@ -80,12 +80,6 @@ var ShowWhatIsNew = false;
 /// Array of URLs of the last-deleted window
 var lastDeletedWindow;
 
-/// The next window uid to hand out.  Monotonic: it only moves forward, so
-/// the counter itself never hands a number out twice.  Serialized as
-/// next_uid in the save data, so it survives restarts and rides along in
-/// every backup.
-var next_uid = 1;
-
 /// Node ID of the last-closed saved window --- merging is prohibited with
 /// this node.  It's the last-closed saved and not the last-closed overall
 /// because nodes for unsaved windows disappear with their windows.
@@ -372,50 +366,49 @@ function showConfirmationModalDialog(message_html, show_dnsa = true) {
 ////////////////////////////////////////////////////////////////////////// }}}1
 // Saving // {{{1
 
-/// Hand out the next window uid.
-function nextUid() {
-    return next_uid++;
-} //nextUid()
+/// Hand out the next window wid: max(wid in the tree) + 1.  Wids are tags
+/// for human eyes, not database keys, so a number freed by a deleted window
+/// may be handed out again later - that keeps the numbers short.
+function nextWid() {
+    let max = 0;
+    let root_node = T.root_node();
+    if (root_node && root_node.children) {
+        for (let win_node_id of root_node.children) {
+            let win_val = D.windows.by_node_id(win_node_id);
+            if (win_val && Number.isInteger(win_val.wid) && win_val.wid > max) {
+                max = win_val.wid;
+            }
+        }
+    }
+    return max + 1;
+} //nextWid()
 
-/// Take note of an existing uid, keeping the counter ahead of it.
-function noteUid(uid) {
-    if (uid >= next_uid) next_uid = uid + 1;
-} //noteUid()
-
-/// Is this uid on some window that is in the tree right now?
-///
-/// "Taken" deliberately means the live tree, not "ever seen": a backup being
-/// restored brings back the very uids its windows owned before, and they
-/// must survive the round trip.  The counter stays monotonic regardless -
-/// noteUid() only ever raises it - so a fresh number is still never a
-/// repeat of an old one.
-function uidTaken(uid) {
+/// Is this wid on some window that is in the tree right now?
+function widTaken(wid) {
     let root_node = T.root_node();
     if (!root_node || !root_node.children) return false;
     for (let win_node_id of root_node.children) {
         let win_val = D.windows.by_node_id(win_node_id);
-        if (win_val && win_val.uid === uid) return true;
+        if (win_val && win_val.wid === wid) return true;
     }
     return false;
-} //uidTaken()
+} //widTaken()
 
-/// Resolve the uid a loaded window brings along: keep it unless it is
+/// Resolve the wid a loaded window brings along: keep it unless it is
 /// missing, malformed, or already on a window in the tree - loading appends
-/// to whatever is here, so an incoming uid can clash with a present one.
-function resolveUid(candidate) {
-    if (Number.isInteger(candidate) && candidate >= 1 && !uidTaken(candidate)) {
-        noteUid(candidate);
+/// to whatever is here, so an incoming wid can clash with a present one.
+function resolveWid(candidate) {
+    if (Number.isInteger(candidate) && candidate >= 1 && !widTaken(candidate)) {
         return candidate;
     }
-    return nextUid();
-} //resolveUid()
+    return nextWid();
+} //resolveWid()
 
 /// Wrap up the save data with a magic header and the current version number
 function makeSaveData(data) {
     return {
         tabfern: 42,
         version: K.SAVE_DATA_AS_VERSION,
-        next_uid: next_uid,
         tree: data,
     };
 } //makeSaveData()
@@ -466,7 +459,8 @@ function saveTree(save_ephemeral_windows = true, cbk = undefined) {
         if (is_ephemeral) result_win.ephemeral = true;
         if (win_val.isOpen) result_win.open = true;
         if (win_val.was_open) result_win.was_open = true;
-        if (win_val.uid) result_win.uid = win_val.uid;
+        if (win_val.wid) result_win.wid = win_val.wid;
+        if (win_val.container_id) result_win.container_id = win_val.container_id;
         // Don't bother putting it in if we don't need it.
 
         // Stash the tabs.  No recursion at this time.
@@ -1489,8 +1483,9 @@ function createNodeForWindow(cwin, keep) {
         return false;
     }
 
-    // A live window entering the tree is new to us, so it gets a fresh uid.
-    val.uid = nextUid();
+    // A live window entering the tree is new to us, so it gets a fresh wid.
+    // No container_id: that belongs to external tooling, not to us.
+    val.wid = nextWid();
 
     M.markWinAsOpen(val, cwin);
     if (keep === K.WIN_KEEP) {
@@ -1556,9 +1551,17 @@ function createNodeForClosedWindowV1(win_data_v1, options = {}) {
         win_data_v1.was_open || (options.mark_open_windows && win_data_v1.open)
     );
 
-    // The window's permanent id: keep what the file says unless it is
-    // missing or already taken here.
-    val.uid = resolveUid(win_data_v1.uid);
+    // The window's wid: keep what the file says unless it is missing or
+    // already taken here.  Files from task-009 wrote the field as "uid".
+    val.wid = resolveWid(
+        win_data_v1.wid !== undefined ? win_data_v1.wid : win_data_v1.uid
+    );
+
+    // The container_id rides along untouched, like ordered_url_hash: we
+    // store it and write it back, but never create or interpret it.
+    if (typeof win_data_v1.container_id === "string" && win_data_v1.container_id) {
+        val.container_id = win_data_v1.container_id;
+    }
 
     // TODO restore ordered_url_hash
 
@@ -1763,16 +1766,15 @@ var loadSavedWindowsFromData = (function () {
     ///     A V1 win may optionally include:
     ///     - ephemeral:<truthy> (default false) to mark ephemeral windows.
     ///     - ordered_url_hash {String}
+    ///     - wid {Number} the window's tag ("uid" in older files)
+    ///     - container_id {String} opaque id owned by external tooling
     /// Each tab is {raw_title: "foo", raw_url: "bar"}
     ///     A V1 tab may optionally include:
     ///     - bordered:<truthy> (default false) to mark windows with borders
     function loadSaveDataV1(data, options) {
         if (!data.tree) return false;
-        // The uid counter only moves forward: ours or the file's,
-        // whichever is ahead.  Files from before uids simply have no say.
-        if (Number.isInteger(data.next_uid) && data.next_uid > next_uid) {
-            next_uid = data.next_uid;
-        }
+        // A legacy next_uid in old files is silently ignored: wids are
+        // assigned as max(wid)+1 over the tree, no counter survives.
         //log.info({'loadSaveDataV1':data});
         let numwins = 0;
         for (let win_data_v1 of data.tree) {
@@ -3539,6 +3541,34 @@ function hamRemoveDuplicateWindows() {
     });
 } //hamRemoveDuplicateWindows()
 
+/// Renumber all windows: wid = position 1..N in the current tree order.
+/// Wids are tags for human eyes, so a wholesale rewrite is legal; the price
+/// is that window numbers in previously generated external reports go stale.
+function hamRenumberWindows() {
+    let root = T.root_node();
+    if (!root || !root.children) return;
+
+    function doRenumber() {
+        let next = 1;
+        for (let win_node_id of root.children) {
+            if (win_node_id === T.holding_node_id) continue;
+            let val = D.windows.by_node_id(win_node_id);
+            if (!val) continue;
+            val.wid = next++;
+            M.refresh(val);
+        }
+        saveTree();
+    }
+
+    showConfirmationModalDialog(
+        _T("dlgpRenumberWindows"),
+        false // no DNSA — rewrites every wid, always confirm
+    ).val((result) => {
+        if (!result) return;
+        if (result.reason === "yes") doRenumber();
+    });
+} //hamRenumberWindows()
+
 // You can call proxyfunc with the items or just return them, so we just
 // return them.
 //
@@ -3662,6 +3692,16 @@ function getHamburgerMenuItems(node, _unused_proxyfunc, e) {
             },
         }, //submenu
     }; //sortItem
+
+    items.renumberItem = {
+        label: _T("menuRenumberWindows"),
+        title:
+            "Reassign window numbers as 1..N in the current tree order.  " +
+            "Window numbers in previously generated reports become stale.",
+        action: hamRenumberWindows,
+        icon: "fa fa-list-ol",
+        separator_after: true,
+    };
 
     // Show "Close all and save" only when at least one window is open.
     let anyOpen = false;
