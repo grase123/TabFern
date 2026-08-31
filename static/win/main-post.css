@@ -448,8 +448,10 @@ ul.jstree-contextmenu i {
 #maintree > ul > li.jstree-node > a.jstree-anchor::before {
     content: counter(tf-win-ordinal);
     display: inline-block;
-    min-width: 2.2em;
-    margin-right: 2px;
+    /* Just enough for three digits - a real tree runs into the hundreds -
+     * with a visible gap between the number and the icon. */
+    min-width: 1.6em;
+    margin-right: 0.35em;
     text-align: right;
     color: #888;
 }
