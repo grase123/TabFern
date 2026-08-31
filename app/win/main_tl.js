@@ -80,15 +80,11 @@ var ShowWhatIsNew = false;
 /// Array of URLs of the last-deleted window
 var lastDeletedWindow;
 
-/// The next window uid to hand out.  Monotonic: it only moves forward, so a
-/// deleted window's number is never reused.  Serialized as next_uid in the
-/// save data, so it survives restarts and rides along in every backup.
+/// The next window uid to hand out.  Monotonic: it only moves forward, so
+/// the counter itself never hands a number out twice.  Serialized as
+/// next_uid in the save data, so it survives restarts and rides along in
+/// every backup.
 var next_uid = 1;
-
-/// Every uid seen this session, in the tree or handed out.  Loading a file
-/// appends windows to the tree, so an incoming uid can clash with one that
-/// is already here; this is how the clash is spotted.
-var seen_uids = new Set();
 
 /// Node ID of the last-closed saved window --- merging is prohibited with
 /// this node.  It's the last-closed saved and not the last-closed overall
@@ -378,26 +374,36 @@ function showConfirmationModalDialog(message_html, show_dnsa = true) {
 
 /// Hand out the next window uid.
 function nextUid() {
-    let uid = next_uid++;
-    seen_uids.add(uid);
-    return uid;
+    return next_uid++;
 } //nextUid()
 
 /// Take note of an existing uid, keeping the counter ahead of it.
 function noteUid(uid) {
-    seen_uids.add(uid);
     if (uid >= next_uid) next_uid = uid + 1;
 } //noteUid()
 
-/// Resolve the uid a loaded window brings along: keep it if it is a fresh
-/// positive integer, hand out a new one otherwise.  Loading appends windows
-/// to whatever is already in the tree, so an incoming uid can be taken.
+/// Is this uid on some window that is in the tree right now?
+///
+/// "Taken" deliberately means the live tree, not "ever seen": a backup being
+/// restored brings back the very uids its windows owned before, and they
+/// must survive the round trip.  The counter stays monotonic regardless -
+/// noteUid() only ever raises it - so a fresh number is still never a
+/// repeat of an old one.
+function uidTaken(uid) {
+    let root_node = T.root_node();
+    if (!root_node || !root_node.children) return false;
+    for (let win_node_id of root_node.children) {
+        let win_val = D.windows.by_node_id(win_node_id);
+        if (win_val && win_val.uid === uid) return true;
+    }
+    return false;
+} //uidTaken()
+
+/// Resolve the uid a loaded window brings along: keep it unless it is
+/// missing, malformed, or already on a window in the tree - loading appends
+/// to whatever is here, so an incoming uid can clash with a present one.
 function resolveUid(candidate) {
-    if (
-        Number.isInteger(candidate) &&
-        candidate >= 1 &&
-        !seen_uids.has(candidate)
-    ) {
+    if (Number.isInteger(candidate) && candidate >= 1 && !uidTaken(candidate)) {
         noteUid(candidate);
         return candidate;
     }
