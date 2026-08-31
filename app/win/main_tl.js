@@ -80,6 +80,16 @@ var ShowWhatIsNew = false;
 /// Array of URLs of the last-deleted window
 var lastDeletedWindow;
 
+/// The next window uid to hand out.  Monotonic: it only moves forward, so a
+/// deleted window's number is never reused.  Serialized as next_uid in the
+/// save data, so it survives restarts and rides along in every backup.
+var next_uid = 1;
+
+/// Every uid seen this session, in the tree or handed out.  Loading a file
+/// appends windows to the tree, so an incoming uid can clash with one that
+/// is already here; this is how the clash is spotted.
+var seen_uids = new Set();
+
 /// Node ID of the last-closed saved window --- merging is prohibited with
 /// this node.  It's the last-closed saved and not the last-closed overall
 /// because nodes for unsaved windows disappear with their windows.
@@ -366,9 +376,42 @@ function showConfirmationModalDialog(message_html, show_dnsa = true) {
 ////////////////////////////////////////////////////////////////////////// }}}1
 // Saving // {{{1
 
+/// Hand out the next window uid.
+function nextUid() {
+    let uid = next_uid++;
+    seen_uids.add(uid);
+    return uid;
+} //nextUid()
+
+/// Take note of an existing uid, keeping the counter ahead of it.
+function noteUid(uid) {
+    seen_uids.add(uid);
+    if (uid >= next_uid) next_uid = uid + 1;
+} //noteUid()
+
+/// Resolve the uid a loaded window brings along: keep it if it is a fresh
+/// positive integer, hand out a new one otherwise.  Loading appends windows
+/// to whatever is already in the tree, so an incoming uid can be taken.
+function resolveUid(candidate) {
+    if (
+        Number.isInteger(candidate) &&
+        candidate >= 1 &&
+        !seen_uids.has(candidate)
+    ) {
+        noteUid(candidate);
+        return candidate;
+    }
+    return nextUid();
+} //resolveUid()
+
 /// Wrap up the save data with a magic header and the current version number
 function makeSaveData(data) {
-    return { tabfern: 42, version: K.SAVE_DATA_AS_VERSION, tree: data };
+    return {
+        tabfern: 42,
+        version: K.SAVE_DATA_AS_VERSION,
+        next_uid: next_uid,
+        tree: data,
+    };
 } //makeSaveData()
 
 /// Save the tree to Chrome local storage as **V1** save data.
@@ -417,6 +460,7 @@ function saveTree(save_ephemeral_windows = true, cbk = undefined) {
         if (is_ephemeral) result_win.ephemeral = true;
         if (win_val.isOpen) result_win.open = true;
         if (win_val.was_open) result_win.was_open = true;
+        if (win_val.uid) result_win.uid = win_val.uid;
         // Don't bother putting it in if we don't need it.
 
         // Stash the tabs.  No recursion at this time.
@@ -1439,6 +1483,9 @@ function createNodeForWindow(cwin, keep) {
         return false;
     }
 
+    // A live window entering the tree is new to us, so it gets a fresh uid.
+    val.uid = nextUid();
+
     M.markWinAsOpen(val, cwin);
     if (keep === K.WIN_KEEP) {
         M.remember(node_id, false);
@@ -1502,6 +1549,10 @@ function createNodeForClosedWindowV1(win_data_v1, options = {}) {
     val.was_open = Boolean(
         win_data_v1.was_open || (options.mark_open_windows && win_data_v1.open)
     );
+
+    // The window's permanent id: keep what the file says unless it is
+    // missing or already taken here.
+    val.uid = resolveUid(win_data_v1.uid);
 
     // TODO restore ordered_url_hash
 
@@ -1711,6 +1762,11 @@ var loadSavedWindowsFromData = (function () {
     ///     - bordered:<truthy> (default false) to mark windows with borders
     function loadSaveDataV1(data, options) {
         if (!data.tree) return false;
+        // The uid counter only moves forward: ours or the file's,
+        // whichever is ahead.  Files from before uids simply have no say.
+        if (Number.isInteger(data.next_uid) && data.next_uid > next_uid) {
+            next_uid = data.next_uid;
+        }
         //log.info({'loadSaveDataV1':data});
         let numwins = 0;
         for (let win_data_v1 of data.tree) {
