@@ -3090,12 +3090,18 @@ function hamRestoreFromBackup() {
                 mark_open_windows: true,
             });
             if (!ok) {
-                const errmsg = _T("errCouldNotLoadFile", filename, e);
-                log.warn({ [errmsg]: e });
+                // chrome.i18n.getMessage takes substitutions as an ARRAY
+                // (or a single string), not as a varargs list.
+                const errmsg = _T("errCouldNotLoadFile", [String(filename), ""]);
+                log.warn({ [errmsg]: "load failed after parse" });
                 window.alert(errmsg);
             }
         } catch (e) {
-            const errmsg = _T("errCouldNotParseFile");
+            const errstr = e && e.message ? String(e.message) : String(e);
+            const errmsg = _T("errCouldNotParseFile", [
+                String(filename),
+                errstr,
+            ]);
             log.warn({ [errmsg + " (exception thrown)"]: e });
             window.alert(errmsg);
         }
@@ -3112,7 +3118,7 @@ function hamRestoreFromBackup() {
         let importer = new Modules.importer(document, ".tabfern");
         importer.getFileAsString(processFile);
     } catch (e) {
-        const errmsg = _T("errCouldNotRunImporter", e);
+        const errmsg = _T("errCouldNotRunImporter", String(e));
         log.warn({ [errmsg]: e });
         window.alert(errmsg);
     }
@@ -3150,7 +3156,7 @@ function hamReplaceFromBackup() {
                 mark_open_windows: true,
             });
             if (!ok) {
-                const errmsg = _T("errCouldNotLoadFile", filename, "");
+                const errmsg = _T("errCouldNotLoadFile", [String(filename), ""]);
                 log.warn({ [errmsg]: "load failed after parse" });
                 window.alert(errmsg);
             }
