@@ -421,39 +421,11 @@ ul.jstree-contextmenu i {
 }
 
 /* }}}1 */
-/* --- Window wids and ordinals ----------------------------------- {{{1 -- */
+/* --- Window wids ------------------------------------------------ {{{1 -- */
 
 /* The window's wid (human-facing tag), drawn as part of the label. */
 .tf-win-wid {
     color: #7fb2d9;
-}
-
-/* The ordinal in front of each window row.  It is not data at all: the
- * browser numbers the top-level rows itself and renumbers them on any
- * reorder, so the number can never go stale.  Tabs live in nested lists
- * and are not counted.
- *
- * The number is drawn on the anchor, NOT on the li: the wholerow plugin's
- * hover backdrop is an absolutely positioned div with no `top`, so it sits
- * at its static position - and any box drawn before it on the li pushes
- * every backdrop one line down, which highlights the wrong row on hover. */
-#maintree > ul {
-    counter-reset: tf-win-ordinal;
-}
-
-#maintree > ul > li.jstree-node {
-    counter-increment: tf-win-ordinal;
-}
-
-#maintree > ul > li.jstree-node > a.jstree-anchor::before {
-    content: counter(tf-win-ordinal);
-    display: inline-block;
-    /* Just enough for three digits - a real tree runs into the hundreds -
-     * with a visible gap between the number and the icon. */
-    min-width: 1.6em;
-    margin-right: 0.35em;
-    text-align: right;
-    color: #888;
 }
 
 /* }}}1 */
